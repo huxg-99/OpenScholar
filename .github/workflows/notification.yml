@@ -1,0 +1,58 @@
+name: Notify Feishu on New Pull Request or push
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  notify-feishu:
+    runs-on: [self-hosted]
+    steps:
+      - name: Send PR info to Feishu
+        env:
+          FEISHU_PR_NOTI_URL: https://open.feishu.cn/open-apis/bot/v2/hook/f3328238-298f-4591-af1a-1d66929fb24d
+        run: |
+          curl -X POST "$FEISHU_PR_NOTI_URL" \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "msg_type": "interactive",
+              "card": {
+                "config": {
+                  "wide_screen_mode": true
+                },
+                "header": {
+                  "title": {
+                    "tag": "plain_text",
+                    "content": "🚀 新的 Pull Request 已创建"
+                  }
+                },
+                "elements": [
+                  {
+                    "tag": "markdown",
+                    "content": "**🔖 标题**\n${{ github.event.pull_request.title }}"
+                  },
+                  {
+                    "tag": "markdown",
+                    "content": "**👤 作者**: [${{ github.event.pull_request.user.login }}](https://github.com/${{ github.event.pull_request.user.login }})"
+                  },
+                  {
+                    "tag": "markdown",
+                    "content": "**📄 分支**: `${{ github.event.pull_request.head.ref }}` → `${{ github.event.pull_request.base.ref }}`"
+                  },
+                  {
+                    "tag": "action",
+                    "actions": [
+                      {
+                        "tag": "button",
+                        "text": {
+                          "tag": "lark_md",
+                          "content": "🔗 查看 PR"
+                        },
+                        "url": "${{ github.event.pull_request.html_url }}",
+                        "type": "primary"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }'
